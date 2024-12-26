@@ -9,6 +9,14 @@ import { useDebounceValue } from "usehooks-ts";
 import { ColorPicker } from "@/components/colorPicker";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 const RandomPoints = dynamic(
   () => import("@/components/randomPoints").then((mod) => mod.RandomPoints),
@@ -20,6 +28,7 @@ export default function Home() {
   const [qrColor, setQrColor] = useState("#000000");
   const [bgColor, setBgColor] = useState("#ffffff");
   const [logo, setLogo] = useState<string | null>(null);
+  const [errorLevel, setErrorLevel] = useState<"L" | "M" | "Q" | "H">("H");
   const qrRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -179,7 +188,7 @@ export default function Home() {
                       size={250}
                       fgColor={debouncedQrColor}
                       bgColor={debouncedBgColor}
-                      level="H"
+                      level={errorLevel}
                       imageSettings={
                         logo
                           ? {
@@ -277,6 +286,61 @@ export default function Home() {
                     onChange={setBgColor}
                     presetColors={presetColors}
                   />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex flex-col gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <h3 className="font-semibold text-xs opacity-50 inline-block">
+                            Error Correction
+                          </h3>
+                          <HelpCircle
+                            className="h-3 w-3 inline-block ml-1"
+                            color="gray"
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-sm">
+                            Learn more about{" "}
+                            <Link
+                              href="https://www.qrcode.com/en/about/error_correction.html"
+                              target="_blank"
+                              className="text-sm text-blue-500 underline"
+                            >
+                              error correction levels
+                            </Link>
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <ToggleGroup
+                    type="single"
+                    value={errorLevel}
+                    onValueChange={(value) =>
+                      value && setErrorLevel(value as "L" | "M" | "Q" | "H")
+                    }
+                    className="justify-start"
+                  >
+                    <ToggleGroupItem value="L" aria-label="Low">
+                      L
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="M" aria-label="Medium">
+                      M
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="Q" aria-label="Quartile">
+                      Q
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="H" aria-label="High">
+                      H
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
