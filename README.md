@@ -2,6 +2,8 @@
 
 This is a simple QR code generator built with Next.js, Tailwind CSS, and shadcn/ui.
 
+![QR Code Generator Screenshot](public/screenshot.png)
+
 ## Technologies Used
 
 - [Next.js](https://nextjs.org/) - React framework for building web applications
