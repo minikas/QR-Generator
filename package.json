@@ -2,6 +2,8 @@
   "name": "qr-generator",
   "version": "0.1.0",
   "private": true,
+  "author": "Kas Ferreira <kas_pintxuki@outlook.com> (https://github.com/minikas)",
+  "description": "QR Code Generator",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
