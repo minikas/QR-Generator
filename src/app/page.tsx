@@ -1,6 +1,7 @@
 "use client";
+
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, Fragment } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export default function Home() {
   const [logo, setLogo] = useState<string | null>(null);
   const [fileType, setFileType] = useState<"svg" | "png">("svg");
   const qrRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [debouncedQrData] = useDebounceValue(qrData, 500);
   const [debouncedQrColor] = useDebounceValue(qrColor, 500);
@@ -23,15 +25,13 @@ export default function Home() {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogo(reader.result as string);
-      };
+      reader.onloadend = () => setLogo(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const downloadQR = () => {
-    if (!qrRef.current) return;
+    if (!qrRef.current || !debouncedQrData) return;
 
     const svg = qrRef.current.querySelector("svg");
     if (!svg) return;
@@ -96,109 +96,131 @@ export default function Home() {
         </div>
       </header>
       <main className="flex flex-col gap-8 bg-white/5 rounded-md p-5 min-w-[400px]">
-        <div>
-          <h3 className="font-semibold">Live Preview</h3>
+        <div className="flex flex-col gap-4">
           <div
             ref={qrRef}
             style={{ backgroundColor: debouncedBgColor }}
-            className="flex justify-center p-4 rounded-lg"
+            className="flex justify-center p-4 rounded-lg relative"
           >
-            <QRCodeSVG
-              value={debouncedQrData || "https://example.com"}
-              size={200}
-              fgColor={debouncedQrColor}
-              bgColor={debouncedBgColor}
-              level="H"
-              imageSettings={
-                logo
-                  ? {
-                      src: logo,
-                      height: 40,
-                      width: 40,
-                      excavate: true,
-                    }
-                  : undefined
-              }
-            />
+            {debouncedQrData ? (
+              <Fragment>
+                <QRCodeSVG
+                  value={debouncedQrData}
+                  size={200}
+                  fgColor={debouncedQrColor}
+                  bgColor={debouncedBgColor}
+                  level="H"
+                  imageSettings={
+                    logo
+                      ? {
+                          src: logo,
+                          height: 40,
+                          width: 40,
+                          excavate: true,
+                        }
+                      : undefined
+                  }
+                />
+                <Button
+                  variant="secondary"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {logo ? "Change Logo" : "Add Logo"}
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+              </Fragment>
+            ) : (
+              <div className="w-[200px] h-[200px] bg-gray-200 rounded-lg flex items-center justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Add Logo
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+              </div>
+            )}
           </div>
-        </div>
-        <div>
-          <h3 className="font-semibold">Data to encode</h3>
           <Textarea
-            placeholder="Enter URL or text"
+            placeholder="Enter your URL or text"
             value={qrData}
             onChange={(e) => setQrData(e.target.value)}
-            className="mt-2"
+            className="border-none md:text-lg resize-y focus-visible:ring-0 p-0 text-center"
           />
         </div>
 
         <div>
-          <h3 className="font-semibold">Logo</h3>
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleLogoUpload}
-            className="mt-2"
-          />
-        </div>
-
-        <div>
-          <h3 className="font-semibold">Color</h3>
+          <h3 className="font-semibold text-sm opacity-50">Color</h3>
           <div className="flex gap-2 mt-2">
             <Input
               type="color"
               value={qrColor}
               onChange={(e) => setQrColor(e.target.value)}
-              className="w-10 h-10 rounded-md hover:scale-110 transition-all"
+              className="w-9 h-9 rounded-md hover:scale-110 transition-all"
             />
-            {["#FFB3B3", "#B3FFB3", "#B3B3FF", "#FFB3FF", "#B3FFFF"].map(
-              (color) => (
-                <button
-                  key={color}
-                  className="min-w-10 h-10 rounded-md hover:scale-110 transition-all"
-                  style={{ backgroundColor: color }}
-                  onClick={() => setQrColor(color)}
-                />
-              )
-            )}
+            {[
+              "#FFB3B3",
+              "#B3FFB3",
+              "#B3B3FF",
+              "#FFB3FF",
+              "#B3FFFF",
+              "#000000",
+              "#FFFFFF",
+            ].map((color) => (
+              <button
+                key={color}
+                className="min-w-9 h-9 rounded-md hover:scale-110 transition-all"
+                style={{ backgroundColor: color }}
+                onClick={() => setQrColor(color)}
+              />
+            ))}
           </div>
         </div>
         <div>
-          <h3 className="font-semibold">Background</h3>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="flex gap-2 mt-2">
-              <Input
-                type="color"
-                value={bgColor}
-                onChange={(e) => setBgColor(e.target.value)}
-                className="w-10 h-10 rounded-md hover:scale-110 transition-all"
+          <h3 className="font-semibold text-sm opacity-50">Background</h3>
+          <div className="flex gap-2 mt-2">
+            <Input
+              type="color"
+              value={bgColor}
+              onChange={(e) => setBgColor(e.target.value)}
+              className="w-9 h-9 rounded-md hover:scale-110 transition-all"
+            />
+            {[
+              "#FFB3B3",
+              "#B3FFB3",
+              "#B3B3FF",
+              "#FFB3FF",
+              "#B3FFFF",
+              "#000000",
+              "#FFFFFF",
+            ].map((color) => (
+              <button
+                key={color}
+                className="min-w-9 h-9 rounded-md hover:scale-110 transition-all"
+                style={{ backgroundColor: color }}
+                onClick={() => setBgColor(color)}
               />
-              {["#FFB3B3", "#B3FFB3", "#B3B3FF", "#FFB3FF", "#B3FFFF"].map(
-                (color) => (
-                  <button
-                    key={color}
-                    className="min-w-10 h-10 rounded-md hover:scale-110 transition-all"
-                    style={{ backgroundColor: color }}
-                    onClick={() => setBgColor(color)}
-                  />
-                )
-              )}
-            </div>
+            ))}
           </div>
         </div>
         <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => setFileType("svg")}
-            className={fileType === "svg" ? "bg-pink-500 text-white" : ""}
-          >
+          <Button variant="outline" onClick={() => setFileType("svg")}>
             Export as SVG
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setFileType("png")}
-            className={fileType === "png" ? "bg-pink-500 text-white" : ""}
-          >
+          <Button variant="secondary" onClick={() => setFileType("png")}>
             Export as PNG
           </Button>
           <Button onClick={downloadQR} className="ml-auto">
